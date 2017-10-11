@@ -51,8 +51,9 @@ Session.vim
 
 # PyCharm
 .idea
-.iml
+*.iml
 
 # virtualenv
 .venv*
 src/
+.python-version
