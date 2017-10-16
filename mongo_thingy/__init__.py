@@ -1,6 +1,7 @@
 import collections
 
 from pymongo import MongoClient, ReturnDocument
+from pymongo.errors import OperationFailure
 from thingy import classproperty, DatabaseThingy, registry
 
 from mongo_thingy.cursor import Cursor
@@ -8,8 +9,31 @@ from mongo_thingy.cursor import Cursor
 
 class Thingy(DatabaseThingy):
     client = None
+    validationLevel = "off"
+    validationAction = "warn"
+    validator = None
     _collection = None
     _cursor_cls = Cursor
+
+    def __init__(self, *args, **kwargs):
+        assert self.validationLevel in ["off", "strict", "moderate"], \
+            'Invalid validationLevel should be on of: "off", "strict", "moderate"'
+        assert self.validationAction in ["error", "warn"], \
+            'Invalid validationAction should be on of: "error", "warn"'
+
+        super(Thingy, self).__init__(*args, **kwargs)
+
+        # add serverside validator if provided
+        # FIXME: do it once for class init
+        # FIXME: create db if none, or it'll show OperationFailure: ns does not exist
+        # FIXME: check if validator installed and undo it if no validator provided or
+        #        validation Level or Action changed
+        if self.validator:
+            db = self.database
+            db.command("collMod", self.collection_name,
+                       validator=self.validator,
+                       validationLevel=self.validationLevel,
+                       validationAction=self.validationAction)
 
     @classproperty
     def _table(cls):
