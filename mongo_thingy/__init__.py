@@ -131,6 +131,13 @@ class Thingy(DatabaseThingy):
         if result is not None:
             return cls(result)
 
+    @classmethod
+    def find_one_and_update(cls, *args, **kwargs):
+        kwargs.setdefault("return_document", ReturnDocument.AFTER)
+        result = cls.collection.find_one_and_update(*args, **kwargs)
+        if result is not None:
+            return cls(result)
+
     @property
     def id(self):
         return self.__dict__.get("id") or self._id
